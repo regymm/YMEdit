@@ -1,0 +1,18 @@
+all: myedit
+
+myedit: myedit.o hstring.o myeditio.o myeditvar.o myeditstr.o myeditterm.o
+	$(CC) $^ -o $@
+
+myedit.o: hstring.h myedit.h
+myeditio.o: hstring.h myedit.h
+myeditvar.o: hstring.h myedit.h
+myeditstr.o: hstring.h myedit.h
+myeditterm.o: hstring.h myedit.h
+
+hstring.o: hstring.h
+
+CC = gcc
+
+clean:
+	-rm myedit *.o
+.PHONY: all, clean

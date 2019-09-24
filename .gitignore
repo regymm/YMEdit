@@ -1,0 +1,5 @@
+*.o
+a.out
+ymedit
+myedit
+*.json
