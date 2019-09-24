@@ -22,9 +22,9 @@
 #include "hstring.h"
 
 #define AUTHOR "Peter Gu"
-#define GITHUB "https://github.com/ustcpetergu/Datastructure/tree/master/string"
+#define GITHUB "https://github.com/ustcpetergu/YMEdit"
 #define EMAIL "guyimin@mail.ustc.edu.cn"
-#define VERSION "1.0"
+#define VERSION "1.1"
 //#define DEBUG
 #define MAXBUF 10000
 typedef struct line{

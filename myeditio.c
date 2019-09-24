@@ -79,18 +79,16 @@ int hellopage()
 {
 	enableRawMode(0);
 //	clearscreen();
-	printf("\033[0;37mWelcome to Myedit!\033[0m\r\n");
+	printf("\033[0;37mWelcome to YMEdit(or MyEdit)!\033[0m\r\n");
 	printf("Codes available at  %s\r\n", GITHUB);
 	printf("If you find any bug, or have any suggestion, you can mail to %s\r\n", EMAIL);
 	printf("But I may not have the ability and time to fix them\r\n");
 	printf("\033[0;31mATTENTION!\033[0m\r\n\
 I'm not responsible for (more than) these occasions:\r\n\
-1> You lost your file (I mean FILE, not only CHANGE) you are editing\r\n\
-2> You lost your file simply unmoved on your disk\r\n\
-3> You terminal misbehave after running this program\r\n\
-4> You pick up wrong words or grammars from these text messages, \r\n\
-use them in your own writings, and punished by your teachers\r\n\
-5> Any other errors and misfortunes\r\n\
+1> You lost your file (I mean FILE, not only CHANGE) you are editing;\r\n\
+2> You lost your file simply unmoved on your disk;\r\n\
+3> You terminal misbehave after running this program;\r\n\
+5> Any other errors and misfortunes.\r\n\
 By %s, USTC, 2017\r\n\
 ", AUTHOR);
 	printf("Decide what to do: e to edit, r to open read-only, q to quit\r\n");
@@ -228,7 +226,7 @@ void refreshscreen()
 	//hide cursor and go home
 	char tmp[1000];
 	//title
-	sprintf(tmp, "MyEdit - %s", filename);
+	sprintf(tmp, "YMEdit - %s", filename);
 	printf("\033[0;37m");//white title
 	middleprint(tmp, E.col);
 	printf("\033[0m\r\n");
@@ -290,7 +288,9 @@ void readfile(FILE **f, char *file)
 	//if(!(E.file = (File)malloc(sizeof(Line))))
 		//outofmem();
 	Line *p, *q = NULL;
+	/*int emptyfile = 1;*/
 	while(fgets(tmp, MAXBUF, *f)){
+		/*emptyfile = 0;*/
 		E.linenum++;
 		if(!(p = (Line *)malloc(sizeof(Line))))
 			outofmem();
@@ -305,11 +305,24 @@ void readfile(FILE **f, char *file)
 		if(q) q->next = p;//first time judge
 		q = p;//q = q->next;
 	}
+	/*if(emptyfile){*/
+	/*}*/
 	fclose(*f);
 	if(q)
 		p->next = NULL;
-	else
-		E.file = NULL;//empty file
+	else{
+		//empty file
+		if(!(p = (Line *)malloc(sizeof(Line))))
+			outofmem();
+		if(!(p->s = (HString *)malloc(sizeof(HString))))
+			outofmem();
+		p->s->length = 0;
+		StrAssign(p->s, "");
+		E.linenum = 0;
+		E.file = p;
+		p->next = NULL;
+		p->back = NULL;
+	}
 	setstatusmsg(0, "file read successfully.");
 }
 void do_free()
@@ -432,24 +445,26 @@ void quit()
 		else
 			return;
 	}
-	else
+	else {
 		do_free();
 		isediting = 0;
+	}
 	return;
 }
 void help()
 {
 	clearscreen();
-	printf("\033[0;37mMyEdit help -- version %s\033[0m\r\n", VERSION);
+	printf("\033[0;37mYMEdit help -- version %s\033[0m\r\n", VERSION);
 	printf("^S to Save\r\n\
 ^C, ^D, or ^Q to quit, ^Q three times to abandon changes and force quit\r\n\
 ^H to view this help message\r\n\
 Use Arrow heads or Emacs-like ^F, ^B, ^N, ^P to move\r\n\
 If your terminal misbehave after this program crashed, just type\r\n\
-$reset\r\n\
+~$ reset\r\n\
 and every thing will be OK.\r\n\
+Some code copied and modified from github.com/antirez/kilo \r\n\
 ");
-	printf("Read source code yourself to get more help at %s.\r\n", GITHUB);
+	printf("See README.md for details, or get more help at %s.\r\n", GITHUB);
 	printf("Any key to return ...\r\n");
 	readkey();
 	return;

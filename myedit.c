@@ -111,7 +111,7 @@ int main(int argc, char *argv[])
 		exit(1);
 	fprintf(L, "start\n");
 #endif
-	printf("%s, PID %d, for you to kill.\r\n", argv[0], getpid());
+	printf("%s, PID %d.\r\n", argv[0], getpid());
 #ifdef DEBUG
 	filename = "victim.txt";
 #else
@@ -126,7 +126,7 @@ int main(int argc, char *argv[])
 		printf("This is a wise choice.\r\nGoodbye!\r\n");
 		return 0;
 	}
-	Fileeditinit(&E);
+	Fileeditinit();
 	//log==========
 //	fprintf(L, "%d", E.linenum);
 //	Line *l = E.file;
