@@ -41,9 +41,11 @@ static void Fileeditinit()
 	if (getWindowSize(&(E.row), &(E.col)) == -1){
 		//fail to get winsize, set to 80 * 24
 		setstatusmsg(2, "Unable to get size, it may misbehave!");
-		//e->col = 80;
-		//e->row = 24;
 	}
+#ifdef VT100_LAMED
+	E.row = 24;
+	E.col = 80;
+#endif
 	readfile(&F, filename);
 	start.linenum = 1;
 	start.line = E.file;

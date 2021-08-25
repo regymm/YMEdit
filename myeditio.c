@@ -77,6 +77,10 @@ void outofmem()
 }
 int hellopage()
 {
+#ifdef VT100_LAMED
+	E.readonly = 0;
+	return 1;
+#else
 	enableRawMode(0);
 //	clearscreen();
 	printf("\033[0;37mWelcome to YMEdit(or MyEdit)!\033[0m\r\n");
@@ -88,7 +92,7 @@ I'm not responsible for (more than) these occasions:\r\n\
 1> You lost your file (I mean FILE, not only CHANGE) you are editing;\r\n\
 2> You lost your file simply unmoved on your disk;\r\n\
 3> You terminal misbehave after running this program;\r\n\
-5> Any other errors and misfortunes.\r\n\
+4> Any other errors and misfortunes.\r\n\
 By %s, USTC, 2017\r\n\
 ", AUTHOR);
 	printf("Decide what to do: e to edit, r to open read-only, q to quit\r\n");
@@ -106,6 +110,7 @@ By %s, USTC, 2017\r\n\
 	}
 	disableRawMode(0);
 	return 0;
+#endif
 }
 void setstatusmsg(int level, const char *msg, ...)
 {
@@ -168,7 +173,22 @@ int endpage()
 }
 void clearscreen()
 {
+#ifdef VT100_LAMED
+	setCursorOrigin();
+	int i, j;
+	Curpos pos;
+	for (i = 0; i < 24; i++) {
+		pos.x = i + 1;
+		pos.y = 1;
+		setCursorPosition(&pos);
+		for(j = 0; j < 80; j++) {
+			printf(" ");
+		}
+	}
+	setCursorOrigin();
+#else
 	printf("\033c");
+#endif
 }
 void printaline(int num, HString *s, int start, int max)
 {
@@ -180,7 +200,7 @@ void printaline(int num, HString *s, int start, int max)
 	int i;
 	for(i = 1; i <= max - 5; i++){
 		if(i + start - 1 <= s->length){
-			if(s->ch[start + i - 2] == '\t') printf("\033[;32mt\033[0m");
+			if(s->ch[start + i - 2] == '\t') printf("\033[;32m \033[0m");
 			//'\t' is a green t, to make sure every char only need one position
 			else printf("%c", s->ch[start + i - 2]);
 		}
@@ -190,6 +210,27 @@ void printaline(int num, HString *s, int start, int max)
 	else printf("|");
 	printf("\r");
 }
+#ifdef VT100_LAMED
+void sprintaline(int num, HString *s, int start, int max, char* st)
+{
+	//struct abuf ab = ABUF_INIT;
+	printf("\r");
+	sprintf(st, "%3d", num);//line number
+	if(start == 1) sprintf(st+3, "|");
+	else sprintf(st+3, "<");
+	int i;
+	for(i = 1; i <= max - 5; i++){
+		if(i + start - 1 <= s->length){
+			char c = s->ch[start + i - 2];
+			sprintf(st+4+i-1, "%c", c == '\t' ? ' ' : c);
+		}
+		else sprintf(st+4+i-1, " ");
+	}
+	if(s->length - start + 1> max - 5) sprintf(st+4+i-1, ">");
+	else sprintf(st+4+i-1, "|");
+	printf("\r");
+}
+#endif
 void middleprint(char *s, int len)
 {
 	int slen = strlen(s);
@@ -222,7 +263,47 @@ void leftprint(char *s, int len)
 }
 void refreshscreen()
 {
-	printf("\033[?25l\033[H");
+#ifdef VT100_LAMED
+	static char fb[24][80] = {0};
+	static char fb_new[24][80];
+	int i, j;
+	for(i = 0; i < 24; i++)
+		for(j = 0; j < 80; j++)
+			fb_new[i][j] = ' ';
+	
+	snprintf(fb_new[0], 80, "YMEdit - %s", filename);
+	Line *l = start.line;
+	for(i = 0; i <= E.row - 3; i++){
+		if(l){
+			sprintaline(start.linenum + i, l->s, cursor.start, E.col, fb_new[i+1]);
+			l = l->next;
+		}
+		else{
+			HString empty;
+			empty.length = 0;
+			empty.ch = NULL;
+			sprintaline(start.linenum + i, &empty, 1, E.col, fb_new[i+1]);
+		}
+	}
+
+	for(i = 0; i < E.col; i++)
+		sprintf(fb_new[23]+i, " "); //overwrite old msg
+	sprintf(fb_new[23]+i, "%s", statusmsg); //last status bar
+	Curpos pos = {.x = 1, .y = 1};
+	for(i = 0; i < 24; i++)
+		for(j = 0; j < 80; j++)
+			if (fb[i][j] != fb_new[i][j]) {
+				pos.x = i+1; pos.y = j+1;
+				setCursorPosition(&pos);
+				for(; j < 80; j++)
+					printf("%c", fb_new[i][j]);
+			}
+	for(i = 0; i < 24; i++)
+		for(j = 0; j < 80; j++)
+			fb[i][j] = fb_new[i][j];
+#else
+	printf("\033[?25l");
+	setCursorOrigin();
 	//hide cursor and go home
 	char tmp[1000];
 	//title
@@ -234,9 +315,6 @@ void refreshscreen()
 	Line *l = start.line;
 	for(i = 0; i <= E.row - 3; i++){
 		if(l){
-//			if(l == cursor.line)//the line editing
-//				printaline(start.linenum + i, l->s, cursor.start, E.col);
-//			else
 			printaline(start.linenum + i, l->s, cursor.start, E.col);
 			printf("\r\n");
 			l = l->next;
@@ -254,23 +332,12 @@ void refreshscreen()
 		printf(" "); //overwrite old msg
 	printf("\r");
 	printf("%s", statusmsg); //last status bar
-//	mylog("%s", statusmsg);
-//	fflush(stdout);
-//	mylog(statusmsg);
-	//mylog(statusmsg);
-	//abFree(&bufmsg);
+#endif
 
 	//now move the cursor to the pos to edit
 	saved.x = cursor.linenum - start.linenum + 2;
 	saved.y = cursor.col - cursor.start + 5;
 	setCursorPosition(&saved);
-
-	//struct abuf ab = ABUF_INIT;
-	//abAppend(&ab,"\x1b[?25l",6); /* Hide cursor. */
-	//abAppend(&ab,"\x1b[H",3); /* Go home. */
-	//abAppend(&ab,"\x1b[?25h",6); /* Show cursor. */
-	//write(1,ab.b,ab.len);
-	//abFree(&ab);
 	
 	printf("\033[?25h"); //show cursor
 	fflush(stdout);

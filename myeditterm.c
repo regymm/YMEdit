@@ -126,6 +126,10 @@ int getWindowSize(int *rows, int *cols) {
 //    if (sscanf(buf+2,"%d;%d",&pos->x,&pos->y) != 2) return -1;
 //    return 0;
 //}
+void setCursorOrigin()
+{
+	printf("\033[1;1H");
+}
 void setCursorPosition(Curpos *pos)
 {
 	//char tmp[10];

@@ -21,6 +21,8 @@
 #include <stdio.h>
 #include "hstring.h"
 
+#define VT100_LAMED
+
 #define AUTHOR "Peter Gu"
 #define GITHUB "https://github.com/ustcpetergu/YMEdit"
 #define EMAIL "guyimin@mail.ustc.edu.cn"
@@ -109,6 +111,7 @@ int getWindowSize(int *rows, int *cols);
 void disableRawMode(int fd);
 int enableRawMode(int fd);
 //int saveCursorPosition(Curpos *pos); 
+void setCursorOrigin(); 
 void setCursorPosition(Curpos *pos); 
 
 void setstatusmsg(int level, const char *msg, ...);
